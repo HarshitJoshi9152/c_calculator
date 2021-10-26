@@ -42,12 +42,10 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
     int intlen = 0;
     bool intSet = 0;
 
-    int byte_len = 0;
-
     while(count < len) {
         char c = string[count];
-        printf("char = %c\t ascii: %d\n", c, c);
-        // whitespace
+        //printf("char = %c\t ascii: %d\n", c, c);
+        // whitespace | TODO REMOVE WHITESPACE PARSING CODE AND REMOVE WHITESPACES BEFOREHAND
         if (c == 0x20) {
             // add intBuff to bytecode array;
             if (intSet) {
@@ -56,7 +54,6 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
                 intBuff = 0;
                 intlen = 0;
                 inst_counter++;
-                byte_len += 1;
             }
             count++;
             continue;
@@ -75,19 +72,12 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
                 fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
                 break;
             }
-            printf("\n");
-            printf("10 * intBuff + (c - '0');\n");
-            printf("\t%lf * %d + %d\n", pow(10, intlen), intBuff, (c - '0'));
             intBuff = 10 * intBuff + (c - '0');
-            printf("intbuff = %d\n", intBuff);
-            printf("\n");
             intlen += 1;
             intSet = true;
             // we are not adding anything to the array so we have to counter blank array indexes;
             inst_counter--;
-            byte_len -= 1;
         }
-        byte_len += 1;
         inst_counter++;
         count++;
     }
@@ -97,31 +87,17 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
     return inst_counter + 1;
 }
 int parseByteCode(int* bytecode, int len) {
-    printf("\nPARSING STARTS:\n");
     // odd indexes are operators and even indexes are operands.
-    int a, b, c, d;
-    bool a_set, b_set;
-    for (int i = 0; i < len; i++) {
-        // even index meaning operand value
-        printf("i is = %d\n", i);
-        printf("index is = %d\n", bytecode[i]);
-        if (i % 2 == 0) {
-            // this logic feels useless now lmao
-            if (!a_set) {
-                a = bytecode[i];
-                //a_set = true;
-            } else {
-                b = bytecode[i];
-            }
-        }
-        else {
+    for (int i = 0; i < len; i++)
+    {
+        if (i % 2 != 0) {
             // operator check | compute the value and put it in next index slot if it is available
             //enum operations {ADD, SUB, MUL, DIV};
             int op = bytecode[i];
             int op1 = bytecode[i - 1];
             int op2 = bytecode[i + 1];
             bool last_comp = (i + 2 == len);
-            printf("op = %d\nop1 = %d\nop2 = %d\n, slots=%d\n", op, op1, op2, last_comp);
+            //printf("op = %d\nop1 = %d\nop2 = %d\n, slots=%d\n", op, op1, op2, last_comp);
             int res;
             switch (op) {
                 case ADD: 
@@ -149,12 +125,6 @@ int parseByteCode(int* bytecode, int len) {
         }
     }
 }
-void printBytecode(int list[1000], int len) {
-    printf("PRINTING BYTECODE\n");
-    for (int i = 0; i < len; i++) {
-        printf("%d ", *(list + i));
-    }
-}
 
 void introduction() {
     printf("Welcome to C_Calculator ! you can perform simple operations like +,-,/,*\n");
@@ -169,27 +139,17 @@ int main(int argc, char* argv[]) {
         // getting user input
         printf(">> ");
         scanf("%[^\n]%*c", input);
-        printf("GOT INPUT !\n");
         // check if user wants to exit
         if (match(input, "exit")) {
             break;
         }
-        //parseInput
-        printf("%s\n", input);
-        //int z[] = {1,8,2,3,4,5};
-        //printBytecode(z, 6);
         
         int bytecode[1000];
         unsigned int len = strlen(input);
-        int byte_len = genByteCode(input, len, bytecode);
+        int byte_code_len = genByteCode(input, len, bytecode);
 
-        // int length = sizeof(bytecode) / sizeof(bytecode[0]);
-        printf("len is %d", byte_len); // length is 1000 lol
-        int res = parseByteCode(bytecode, byte_len); // ya length determination is the only task left now !
-        printf("res = %d", res);
-
-        printf("\nbytecode pointer =>> %p\n", bytecode);
-
+        int result = parseByteCode(bytecode, byte_code_len); 
+        printf("%d\n", result);
     }
     return 0;
 }
@@ -211,3 +171,9 @@ int main(int argc, char* argv[]) {
 
 // assigning items to int array passed as pointer to function
 // https://beginnersbook.com/2014/01/c-passing-array-to-function-example/
+
+/* TODO
+ * ADD PARENTHESIS SUPPORT 
+ * ADD BODMAS
+ * ADD INTERACTIVE BPYTHON LIKE CONSOLE
+ */
