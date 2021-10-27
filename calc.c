@@ -30,7 +30,7 @@ unsigned int mystrlen(const int* arr)
 
 enum operations {ADD, SUB, MUL, DIV};
 
-// rewrite SHIT ! JUMP HERE 
+// NO BODMAS
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
 int genByteCode(char string[], int len, int bytecode[1000]) {
     // loop over the string and retrun byte codes
@@ -90,6 +90,7 @@ int parseByteCode(int* bytecode, int len) {
     // odd indexes are operators and even indexes are operands.
     for (int i = 0; i < len; i++)
     {
+        // but this method doesnt take operator precedence into account.
         if (i % 2 != 0) {
             // operator check | compute the value and put it in next index slot if it is available
             //enum operations {ADD, SUB, MUL, DIV};
@@ -126,6 +127,93 @@ int parseByteCode(int* bytecode, int len) {
     }
 }
 
+// BODMAS SUPPORT !
+int reduce_bytecode(int* bytecode, int len) {
+    if (len == 1) return bytecode[0];
+    // loop over instructions and find highest order function. [inst are at odd indexes]
+    int i = 1;
+    int max_inst=0;
+    int max_inst_count=0;
+    int max_inst_indexes[len]; // cannot be more than the $len in anyway.
+
+    while(i < len) {
+        int code = bytecode[i];
+        if (code > max_inst) {
+            max_inst = code;
+            max_inst_count = 0;
+            // clear the indexes_list; maybe we dont need this because we are also using length ! think !
+            //for (int j = 0; j < max_inst_count; j++) {
+            //    max_inst_indexes[j] = 0;
+            //}
+        }
+        if (code == max_inst) {
+            max_inst_indexes[max_inst_count++] = i;
+        }
+        i += 2;
+    }
+
+    // evaluate the indexes where max_values are;
+    //printf("max_inst_count: %d\n", max_inst_count);
+    //printf("max_inst: %d\n", max_inst);
+
+    //printf("INDEXES => ");
+    //for (int j = 0; j < max_inst_count; j++) {
+    //    printf("%d  ", max_inst_indexes[j]);
+    //}
+
+    // evaluate the highest order bytecode operation indexes and store the result in left side index
+    // and shift all the values after the index to the left;
+    int offset = 0;
+    for (int counter = 0; counter < max_inst_count; counter++) {
+        int i = max_inst_indexes[counter] - offset;
+        // evaluate the operation
+
+        //enum operations {ADD, SUB, MUL, DIV};
+        int op = bytecode[i];
+        int op1 = bytecode[i - 1];
+        int op2 = bytecode[i + 1];
+        int res;
+        
+        switch (op) {
+            case ADD: 
+                res = op1 + op2;
+                break; // will this break break the for loop too ?
+            case SUB:
+                res = op1 - op2;
+                break;
+            case MUL:
+                res = op1 * op2;
+                break;
+            case DIV:
+                res = op1 / op2;
+                break;
+            default:
+                fprintf(stderr, "ERROR ENCOUNTERED ! INVALID OPERATOR CODE : %d", op);
+                return 1;
+                break;
+        }
+
+        //printf("RESULTS ARE => ");
+        //printf("%d  ", res);
+        //
+        // shift instructions to the right to the left side !
+        bytecode[i-1] = res;
+
+        for (int jj=i; jj < len; jj++) {
+            if (len <= jj + 2) {
+                break;
+            }
+            bytecode[jj] = bytecode[jj + 2];
+        }
+
+        offset += 2; // index offset for max_inst_indexes
+
+    }
+
+    return reduce_bytecode(bytecode, len - offset);
+}
+
+
 void introduction() {
     printf("Welcome to C_Calculator ! you can perform simple operations like +,-,/,*\n");
     printf("built By @HarshitJoshi9152, report issues at \n");
@@ -148,8 +236,19 @@ int main(int argc, char* argv[]) {
         unsigned int len = strlen(input);
         int byte_code_len = genByteCode(input, len, bytecode);
 
-        int result = parseByteCode(bytecode, byte_code_len); 
-        printf("%d\n", result);
+        if (argc > 1) {
+            printf("Printing Byte Code !\n");
+            for (int i = 0; i < byte_code_len; i++) {
+                printf("%d  ", bytecode[i]);
+            }
+            printf("----------\n");
+        }
+
+        //int result = parseByteCode(bytecode, byte_code_len); 
+        //printf("%d\n", result);
+
+        int res = reduce_bytecode(bytecode, byte_code_len);
+        printf("%d\n", res);
     }
     return 0;
 }
@@ -176,4 +275,6 @@ int main(int argc, char* argv[]) {
  * ADD PARENTHESIS SUPPORT 
  * ADD BODMAS
  * ADD INTERACTIVE BPYTHON LIKE CONSOLE
+ * USE DOUBLES FOR DIVISION
+ * ADD SOME REDUCE LIKE FUNCTION TO EVALUATE THE BYTECODE IN BODMAS ORDER
  */
