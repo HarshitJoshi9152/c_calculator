@@ -40,5 +40,11 @@ int main() {
     printf("unusable null termination in int array\n"); // ok so we cant use null termination in int arrays becuase 0x00 is an int itself 0;
     int lst3[] = {0, 1,2,3,4,5,6,7,8,9, 0x00};
     print2(lst3);
+
+    char name[] = "harshit";
+    // name[2] = "z"; // wouldnt work because "" denote char pointer !!
+    // warning: assignment to ‘char’ from ‘char *’ makes integer from pointer without a cast
+    name[2] = 'z'; // this works !
+    printf("\n%s\n", name);
 }
 

@@ -16,76 +16,113 @@ int match(char str1[], char str2[]) {
     return !strcmp(str1, str2);
 }
 
-unsigned int mystrlen(const int* arr)
- {
-     unsigned int length = 0;
-     while (*arr != 0)
-     {
-         arr++;
-         length++;
-     }
-     return length;
- }
-
+void strip(char* str, int len) {
+    // str is just a pointer so we cant use strlen here !
+    for (int i=0; i < len; i++) {
+        int char_ascii = str[i];
+        bool remove = false;
+        switch (char_ascii)
+        {
+            case 0x20:  // space
+                remove = true;
+                break;
+            case 0x9: // tabs
+                remove = true;
+                break;
+            case 0x0a: // newline
+                remove = true;
+                break;
+            case 0x0d: // carriage return
+                remove = true;
+                break;
+            case 0x0c: // form feed
+                remove = true;
+                break;
+            case 0x0b: // vertical tab
+                remove = true;
+                break;
+            default:
+                break;
+        }
+        if (remove) {
+            // shift all values to the left to fill the removed spot;
+            for (int j = i; j < len; j++) {
+                str[j] = str[j+1];
+            }
+        }
+    }
+}
 
 enum operations {ADD, SUB, MUL, DIV};
 
 // NO BODMAS
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
 int genByteCode(char string[], int len, int bytecode[1000]) {
-    // loop over the string and retrun byte codes
     // int bytecode[1000]; // formatted like {value, inst_, value, inst_, value}
-    int inst_counter = 0;
-    int count = 0;
+    int inst_counter = 0;  // no of instructions in bytecode
+    int count = 0;         // loop counter
     // unsigned int len = strlen(string); // bad operation !
-    int intBuff = 0;
-    int intlen = 0;
+    int intBuff = 0; // stores accumulated integer value when reading int by int
+    int intlen = 0;  // stored length of int currently being read.
     bool intSet = 0;
 
     while(count < len) {
+        bool is_operator = false;
         char c = string[count];
-        //printf("char = %c\t ascii: %d\n", c, c);
-        // whitespace | TODO REMOVE WHITESPACE PARSING CODE AND REMOVE WHITESPACES BEFOREHAND
-        if (c == 0x20) {
-            // add intBuff to bytecode array;
-            if (intSet) {
-                intSet = false;
-                bytecode[inst_counter] = intBuff; // aah we need a flag for here for 10 + 20 => for whitespace after + .
-                intBuff = 0;
-                intlen = 0;
-                inst_counter++;
-            }
-            count++;
-            continue;
-        }
         // ADD
-        else if (c == 0x2b) bytecode[inst_counter] = ADD;
+        if (c == 0x2b) {
+            bytecode[inst_counter] = ADD;
+            is_operator = true;
+        }
         // SUB
-        else if (c == 0x2d) bytecode[inst_counter] = SUB;
+        else if (c == 0x2d) {
+            bytecode[inst_counter] = SUB;
+            is_operator = true;
+        }
         // MUL
-        else if (c == 0x2a) bytecode[inst_counter] = MUL;
+        else if (c == 0x2a) {
+            bytecode[inst_counter] = MUL;
+            is_operator = true;
+        }
         // DIV
-        else if (c == 0x2f) bytecode[inst_counter] = DIV;
+        else if (c == 0x2f) {
+            bytecode[inst_counter] = DIV;
+            is_operator = true;
+        }
         // likely int value
         else {
             if (!isdigit(c)) {
                 fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
                 break;
             }
+            intSet = true;
             intBuff = 10 * intBuff + (c - '0');
             intlen += 1;
-            intSet = true;
-            // we are not adding anything to the array so we have to counter blank array indexes;
-            inst_counter--;
         }
-        inst_counter++;
+
+        if (is_operator) {
+            // printf("%c\n", c);
+            if (intSet) {
+                bytecode[inst_counter] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+                is_operator = false;
+                inst_counter += 2; // once for the int stored once for the operator !
+            } else {
+                // operator after operator without any operand in between
+                // RAISE ERROR
+            }
+        }
         count++;
     }
-    if (intBuff != 1) {
+
+    if (intSet) {
         bytecode[inst_counter] = intBuff;
     }
     return inst_counter + 1;
 }
+
 int parseByteCode(int* bytecode, int len) {
     // odd indexes are operators and even indexes are operands.
     for (int i = 0; i < len; i++)
@@ -221,6 +258,11 @@ void introduction() {
 }
 
 int main(int argc, char* argv[]) {
+    //printf("%d\n",argc);
+    //for (int i = 0; i < argc; i++) {
+    //    printf("%s ", argv[i]);
+    //}
+    //printf("\n");
     introduction();
     char input[100];
     // store history
@@ -232,9 +274,16 @@ int main(int argc, char* argv[]) {
         if (match(input, "exit")) {
             break;
         }
+
+        // strip user input | remove whitespace characters.
         
-        int bytecode[1000];
+        // char input2[1000];
+        // strcpy(input2, input);
+        strip(input, strlen(input));
+
         unsigned int len = strlen(input);
+
+        int bytecode[1000];
         int byte_code_len = genByteCode(input, len, bytecode);
 
         if (argc > 1) {
