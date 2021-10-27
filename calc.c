@@ -278,7 +278,6 @@ int main(int argc, char* argv[]) {
         else if(match(input, "history")) {
             for (int i = 0; i < history_counter; i++) {
                 printf("%s\n", history[i].question);
-                // printf("%d\n", strlen(history[i].question));
                 printf("%d\n", history[i].answer);
             }
             continue;
@@ -303,7 +302,7 @@ int main(int argc, char* argv[]) {
         printf("%d\n", res);
 
         // history[history_counter++].question = input // wouldnt Work because strings cannot be reassigned wholely like this
-        strcpy(history[history_counter++].question, input);
+        strcpy(history[history_counter].question, input);
         history[history_counter++].answer = res;
 
     }
