@@ -124,15 +124,14 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
             bytecode[inst_counter++] = DIV;
             
         }
-        // likely int value
-        else {
-            if (!isdigit(c)) {
-                fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
-                break;
-            }
+        // integer value
+        else if(isdigit(c)) {
             intSet = true;
             intBuff = 10 * intBuff + (c - '0');
             intlen += 1;
+        } else {
+            fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
+            break;
         }
         count++;
     }
@@ -241,7 +240,7 @@ void introduction() {
 //     }
 //     else if(match(input, "history"))
 //     {
-//         for (int i = 0; i < calc_counter; i++) {
+//         for (int i = 0; i < history_counter; i++) {
 //             printf("%s\n", history[i].question);
 //             printf("%d\n", history[i].answer);
 //         }
@@ -257,18 +256,35 @@ int main(int argc, char* argv[]) {
     introduction();
     char input[100];
     // store history
+    struct CALCULATION {
+        char question[1000];
+        int answer;
+    };
+    unsigned char history_counter = 0; // what chars are signed too ?
+    struct CALCULATION history[1000];
+
     while(1) {
         // getting user input
         printf(">> ");
         scanf("%[^\n]%*c", input);
+
+        // strip user input | remove whitespace characters.
+        strip(input, strlen(input));
+
         // check if user wants to exit
         if (match(input, "exit")) {
             break;
         }
+        else if(match(input, "history")) {
+            for (int i = 0; i < history_counter; i++) {
+                printf("%s\n", history[i].question);
+                // printf("%d\n", strlen(history[i].question));
+                printf("%d\n", history[i].answer);
+            }
+            continue;
+        }
 
-        // strip user input | remove whitespace characters.
-
-        strip(input, strlen(input));
+        // bytecode generation and evaluation process starts
 
         unsigned int len = strlen(input);
 
@@ -285,6 +301,11 @@ int main(int argc, char* argv[]) {
 
         int res = reduce_bytecode(bytecode, byte_code_len);
         printf("%d\n", res);
+
+        // history[history_counter++].question = input // wouldnt Work because strings cannot be reassigned wholely like this
+        strcpy(history[history_counter++].question, input);
+        history[history_counter++].answer = res;
+
     }
     return 0;
 }
