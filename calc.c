@@ -67,27 +67,62 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
     bool intSet = 0;
 
     while(count < len) {
-        bool is_operator = false;
         char c = string[count];
         // ADD
         if (c == 0x2b) {
-            bytecode[inst_counter] = ADD;
-            is_operator = true;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            } else {
+                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                break;
+            }
+            bytecode[inst_counter++] = ADD;
+            
         }
         // SUB
         else if (c == 0x2d) {
-            bytecode[inst_counter] = SUB;
-            is_operator = true;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            } else {
+                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                break;
+            }
+            bytecode[inst_counter++] = SUB;
+            
         }
         // MUL
         else if (c == 0x2a) {
-            bytecode[inst_counter] = MUL;
-            is_operator = true;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            } else {
+                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                break;
+            }
+            bytecode[inst_counter++] = MUL;
+            
         }
         // DIV
         else if (c == 0x2f) {
-            bytecode[inst_counter] = DIV;
-            is_operator = true;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            } else {
+                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                break;
+            }
+            bytecode[inst_counter++] = DIV;
+            
         }
         // likely int value
         else {
@@ -99,21 +134,6 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
             intBuff = 10 * intBuff + (c - '0');
             intlen += 1;
         }
-
-        if (is_operator) {
-            // printf("%c\n", c);
-            if (intSet) {
-                bytecode[inst_counter] = intBuff;
-                intSet = false;
-                intBuff = 0;
-                intlen = 0;
-                is_operator = false;
-                inst_counter += 2; // once for the int stored once for the operator !
-            } else {
-                // operator after operator without any operand in between
-                // RAISE ERROR
-            }
-        }
         count++;
     }
 
@@ -121,48 +141,6 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
         bytecode[inst_counter] = intBuff;
     }
     return inst_counter + 1;
-}
-
-int parseByteCode(int* bytecode, int len) {
-    // odd indexes are operators and even indexes are operands.
-    for (int i = 0; i < len; i++)
-    {
-        // but this method doesnt take operator precedence into account.
-        if (i % 2 != 0) {
-            // operator check | compute the value and put it in next index slot if it is available
-            //enum operations {ADD, SUB, MUL, DIV};
-            int op = bytecode[i];
-            int op1 = bytecode[i - 1];
-            int op2 = bytecode[i + 1];
-            bool last_comp = (i + 2 == len);
-            //printf("op = %d\nop1 = %d\nop2 = %d\n, slots=%d\n", op, op1, op2, last_comp);
-            int res;
-            switch (op) {
-                case ADD: 
-                    res = op1 + op2;
-                    break; // will this break break the for loop too ?
-                case SUB:
-                    res = op1 - op2;
-                    break;
-                case MUL:
-                    res = op1 * op2;
-                    break;
-                case DIV:
-                    res = op1 / op2;
-                    break;
-                default:
-                    fprintf(stderr, "ERROR ENCOUNTERED ! INVALID OPERATOR CODE : %d", op);
-                    return 1;
-                    break;
-            }
-            if (last_comp) {
-                return res;
-            } else {
-                bytecode[i+1] = res;
-            }
-        }
-    }
-    return 1; // we will likely never reach here
 }
 
 // BODMAS SUPPORT !
@@ -257,6 +235,19 @@ void introduction() {
     printf("built By @HarshitJoshi9152, report issues at \n");
 }
 
+// void check_commands(char *input) {
+//     if (match(input, "exit")) {
+//         break
+//     }
+//     else if(match(input, "history"))
+//     {
+//         for (int i = 0; i < calc_counter; i++) {
+//             printf("%s\n", history[i].question);
+//             printf("%d\n", history[i].answer);
+//         }
+//     }
+// }
+
 int main(int argc, char* argv[]) {
     //printf("%d\n",argc);
     //for (int i = 0; i < argc; i++) {
@@ -276,9 +267,7 @@ int main(int argc, char* argv[]) {
         }
 
         // strip user input | remove whitespace characters.
-        
-        // char input2[1000];
-        // strcpy(input2, input);
+
         strip(input, strlen(input));
 
         unsigned int len = strlen(input);
@@ -291,11 +280,8 @@ int main(int argc, char* argv[]) {
             for (int i = 0; i < byte_code_len; i++) {
                 printf("%d  ", bytecode[i]);
             }
-            printf("----------\n");
+            printf("\n----------\n");
         }
-
-        //int result = parseByteCode(bytecode, byte_code_len); 
-        //printf("%d\n", result);
 
         int res = reduce_bytecode(bytecode, byte_code_len);
         printf("%d\n", res);
