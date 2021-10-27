@@ -125,6 +125,7 @@ int parseByteCode(int* bytecode, int len) {
             }
         }
     }
+    return 1; // we will likely never reach here
 }
 
 // BODMAS SUPPORT !
