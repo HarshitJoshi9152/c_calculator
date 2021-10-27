@@ -4,12 +4,12 @@ simple shell console like interactive Calculator made in C by [Harshit Joshi](ht
 
 ## features
 
-    - BODMAS SUPPORT
-    - supports +,-,*,/ 
+- BODMAS SUPPORT
+- supports +,-,*,/ 
 
 ## limitations
 
-    - not really interactive right now (arrow keys dont work like they should in an interactive console etc).
-    - dont work without adding whitespaces between operands and operators.
-    - has not been extensively tested.
-    - doesn't support adding parenthesis to specify precedence.
+- not really interactive right now (arrow keys dont work like they should in an interactive console etc).
+- dont work without adding whitespaces between operands and operators.
+- has not been extensively tested.
+- doesn't support adding parenthesis to specify precedence.
