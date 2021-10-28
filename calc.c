@@ -57,7 +57,7 @@ enum operations {ADD, SUB, MUL, DIV};
 
 // NO BODMAS
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
-int genByteCode(char string[], int len, int bytecode[1000]) {
+bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len) {
     // int bytecode[1000]; // formatted like {value, inst_, value, inst_, value}
     int inst_counter = 0;  // no of instructions in bytecode
     int count = 0;         // loop counter
@@ -131,6 +131,7 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
             intlen += 1;
         } else {
             fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
+            return false;
             break;
         }
         count++;
@@ -139,7 +140,8 @@ int genByteCode(char string[], int len, int bytecode[1000]) {
     if (intSet) {
         bytecode[inst_counter] = intBuff;
     }
-    return inst_counter + 1;
+    *byte_code_len = inst_counter + 1;
+    return true;
 }
 
 // BODMAS SUPPORT !
@@ -288,7 +290,11 @@ int main(int argc, char* argv[]) {
         unsigned int len = strlen(input);
 
         int bytecode[1000];
-        int byte_code_len = genByteCode(input, len, bytecode);
+        int byte_code_len;
+        bool generation_successful = genByteCode(input, len, bytecode, &byte_code_len);
+
+        // dont execute or add the calculation to history if bytecode generation is bad !
+        if (!generation_successful) continue;
 
         if (argc > 1) {
             printf("Printing Byte Code !\n");
