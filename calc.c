@@ -9,6 +9,18 @@
 // https://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Pointers.html
 // https://overiq.com/c-programming-101/array-of-pointers-in-c/
 #include <math.h>
+#include <assert.h>
+// pointer primer : pointer arithmetic, passing function pointers to functions etc
+// https://themightyprogrammer.dev/article/pointer-primer
+// 21:Everything u need 2 know about pointers -Richard Buckland
+// https://www.youtube.com/watch?v=Rxvv9krECNw
+//
+// A stack frame is comprised of:
+//
+//    Local variables
+//    Saved copies of registers modified by subprograms that could need restoration
+//    Argument parameters
+//    Return address
 
 typedef enum {false, true} bool;
 
@@ -53,7 +65,7 @@ void strip(char* str, int len) {
     }
 }
 
-enum operations {ADD, SUB, MUL, DIV};
+enum operations {ADD, SUB, MUL, DIV, OP_PAREN, CL_PAREN};
 
 // NO BODMAS
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
@@ -65,6 +77,9 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
     int intBuff = 0; // stores accumulated integer value when reading int by int
     int intlen = 0;  // stored length of int currently being read.
     bool intSet = 0;
+
+    // int stack[1000];
+    int stack_ctr = 0;
 
     while(count < len) {
         char c = string[count];
@@ -124,6 +139,32 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
             bytecode[inst_counter++] = DIV;
             
         }
+        // PARENTHESIS
+        else if (c == 0x28) {
+            // stack[stack_ctr++] = 1;
+            stack_ctr++;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            }
+            bytecode[inst_counter++] = OP_PAREN;
+        }
+        
+        else if (c == 0x29) {
+            // stack[stack_ctr--] = 0;
+            stack_ctr--;
+            if (intSet) {
+                bytecode[inst_counter++] = intBuff;
+                intSet = false;
+                intBuff = 0;
+                intlen = 0;
+            }
+            bytecode[inst_counter++] = CL_PAREN;
+            // maybe its because of the fact that we dont increment it on the last run !!!1! when its always a char !
+            // YES FIXED IT !!!
+        }
         // integer value
         else if(isdigit(c)) {
             intSet = true;
@@ -137,14 +178,26 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
         count++;
     }
 
-    if (intSet) {
-        bytecode[inst_counter] = intBuff;
+    // assert(stack_ctr == 0);
+
+    if (stack_ctr != 0)
+    {
+        fprintf(stderr, "ERROR ENCOUNTERED ! UNEQUAL OPENING AND CLOSING PARENS !\n");
+        return false;
     }
-    *byte_code_len = inst_counter + 1;
+    
+
+    if (intSet) {
+        // printf("\nINSTST\n"); NOT THE PROBLEM
+        bytecode[inst_counter++] = intBuff;
+    }
+    *byte_code_len = inst_counter;
     return true;
 }
 
 // BODMAS SUPPORT !
+
+// THE NEW BYTECODE ORDER IS NOT COMPATIBLE WITH REDUCE_BYTECODE !!!
 int reduce_bytecode(int* bytecode, int len) {
     if (len == 1) return bytecode[0];
     // loop over instructions and find highest order function. [inst are at odd indexes]
@@ -153,6 +206,7 @@ int reduce_bytecode(int* bytecode, int len) {
     int max_inst_count=0;
     int max_inst_indexes[len]; // cannot be more than the $len in anyway.
 
+    // badcode ?
     while(i < len) {
         int code = bytecode[i];
         if (code > max_inst) {
@@ -183,6 +237,7 @@ int reduce_bytecode(int* bytecode, int len) {
     int offset = 0;
     for (int counter = 0; counter < max_inst_count; counter++) {
         int i = max_inst_indexes[counter] - offset;
+        printf("offset = %d\n", i);
         // evaluate the operation
 
         //enum operations {ADD, SUB, MUL, DIV};
@@ -204,6 +259,29 @@ int reduce_bytecode(int* bytecode, int len) {
             case DIV:
                 res = op1 / op2;
                 break;
+            case OP_PAREN: {
+                // maybe we can optimise this section a bit more ?
+                // pass values till CL_PAREN
+                    puts("here");
+                int byte_slice[1000];
+                int stack_ctr = 1;
+                int jj = i + 1; // we dont want the first paren and the last paren !!!
+                while(jj < len) {
+                    puts("here");
+                    int c = bytecode[jj];
+                    if (c == OP_PAREN) stack_ctr++;
+                    if (c == CL_PAREN) stack_ctr--;
+                    if (stack_ctr == 0) {
+                        break;
+                    }
+                    byte_slice[jj] = c;
+                }
+                int byte_slice_len = jj - i; // ending - starting value MAYBE ADD -1 TOO ??? idk we are excluding the pair of parens tho.
+                printf("byte_slice_len = %d\n", byte_slice_len);
+                res = reduce_bytecode(byte_slice, byte_slice_len);
+                // ya we really should call continue here !
+                break;
+            }
             default:
                 fprintf(stderr, "ERROR ENCOUNTERED ! INVALID OPERATOR CODE : %d", op);
                 return 1;
