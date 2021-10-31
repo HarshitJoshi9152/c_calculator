@@ -304,12 +304,12 @@ int main(int argc, char* argv[]) {
             printf("\n----------\n");
         }
 
-        int res = reduce_bytecode(bytecode, byte_code_len);
+        int res = 42; ///reduce_bytecode(bytecode, byte_code_len);
         printf("%d\n", res);
 
         // history[history_counter++].question = input // wouldnt Work because strings cannot be reassigned wholely like this
-        strcpy(history[history_counter].question, input);
-        history[history_counter++].answer = res;
+        //strcpy(history[history_counter].question, input);
+        //history[history_counter++].answer = res;
 
     }
     return 0;
