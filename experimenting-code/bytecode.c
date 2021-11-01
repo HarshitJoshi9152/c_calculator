@@ -103,6 +103,10 @@ int main(int argc, char** argv) {
     };
 
     struct Address h_addr = {"harshit", "address_string", 20, 100, true};
+    /* C only has initialisation literals for Structs not assignment literals !
+    h_addr = {"", "", 20, 77, false}; // doesnt work
+    h_addr = (struct Address){"", "", 20, 77, false}; // works
+    */
     
     //printf("%s\n", h_addr.name);
     //printf("%s\n", h_addr.address);
@@ -119,3 +123,4 @@ int main(int argc, char** argv) {
 }
 
 // todo counting with static
+
