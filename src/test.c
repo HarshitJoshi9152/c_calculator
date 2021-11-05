@@ -1,11 +1,4 @@
-/*
-// print charbuff
-// for (int i = 0; i < c; i++)
-// {
-//     printf("%d\t", charbuff[i]);
-// }
-*/
-
+// Made for testing !
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -65,23 +58,30 @@ void ReverseArray(int arr[], int size)
     }
 }
 
-/** void move(int steps, DIRECTION dir) { */
-/**     // move(20, right); works ! */
-/**     char dirchar; */
-/**     switch (dir) { */
-/**         case up: */
-/**             dirchar = 'A'; */
-/**         case down: */
-/**             dirchar = 'B'; */
-/**         case right: */
-/**             dirchar = 'C'; */
-/**         case left: */
-/**             dirchar = 'D'; */
-/**         default: */
-/**             break; */
-/**     } */
-/**     printf("\x1b[%d%c", steps, dirchar); */
-/** } */
+void move(int steps, DIRECTION dir) {
+    // move(20, right); works !
+    char dirchar;
+    switch (dir) {
+        case up:
+            dirchar = 'A';
+        case down:
+            dirchar = 'B';
+        case right:
+            dirchar = 'C';
+        case left:
+            dirchar = 'D';
+        default:
+            break;
+    }
+    printf("\x1b[%d%c", steps, dirchar);
+}
+
+void print_until(int *intList, int l) {
+    for (int i = 0; i < l; i++) {
+        printf("%d ", intList[i]);
+    }
+    printf("\n");
+}
 
 // lets make it such that if it identifies the input and returns successfully
 // it must always be a control character ! or any other char that need interpretation
@@ -113,8 +113,10 @@ int identify_input(char inputChar, char* str, int *is_control_char) {
     static struct timeval cache, thistime;
     gettimeofday(&thistime, NULL); // is seconds 
     if (thistime.tv_sec - cache.tv_sec >= 1) {
-        //printf("CLEARING CACHE");
+        //printf("CLEARING CACHE"); //IS THIS CODE REALLY REQUIRED TODO
+        // print_until(charbuff, c);
         memset(charbuff, 0, sizeof(int) * c);
+        c = 0;
     }
     cache.tv_sec = thistime.tv_sec;
 
@@ -136,6 +138,11 @@ int identify_input(char inputChar, char* str, int *is_control_char) {
     int down_[]  = {27, 91, 66};
     int right_[]  = {27, 91, 67};
     int left_[]  = {27, 91, 68};
+    int up_control_pressed[] = {27, 91, 49, 59, 53, 65}; // 5 chars ^[[1;5A
+    int down_control_pressed[] = {27, 91, 49, 59, 53, 66}; // 5 chars ^[[1;5A
+    int right_control_pressed[] = {27, 91, 49, 59, 53, 67}; // 5 chars ^[[1;5A
+    int left_control_pressed[] = {27, 91, 49, 59, 53, 68}; // 5 chars ^[[1;5A
+
     // for inputs that dont occupy more than one character.
     switch(inputChar) {
         case 13:// ^M
@@ -171,10 +178,42 @@ int identify_input(char inputChar, char* str, int *is_control_char) {
                     recording = 0;
                     *is_control_char = 1;
                 }
+                // Control Pressed Arrow Keys !
+                if (memcmp(charbuff, up_control_pressed, sizeof(int) * 6) == 0) {
+                    memset(charbuff, 0, sizeof(int)*c);
+                    c = 0;
+                    strcpy(str, "up_arrow_ctrl");
+                    recording = 0;
+                    *is_control_char = 1;
+                }
+                if (memcmp(charbuff, down_control_pressed, sizeof(int) * 6) == 0) {
+                    memset(charbuff, 0, sizeof(int)*c);
+                    c = 0;
+                    strcpy(str, "down_arrow_ctrl");
+                    recording = 0;
+                    *is_control_char = 1;
+                }
+                if (memcmp(charbuff, right_control_pressed, sizeof(int) * 6) == 0) {
+                    memset(charbuff, 0, sizeof(int)*c);
+                    c = 0;
+                    strcpy(str, "right_arrow_ctrl");
+                    recording = 0;
+                    *is_control_char = 1;
+                }
+                if (memcmp(charbuff, left_control_pressed, sizeof(int) * 6) == 0) {
+                    memset(charbuff, 0, sizeof(int)*c);
+                    c = 0;
+                    strcpy(str, "left_arrow_ctrl");
+                    recording = 0;
+                    *is_control_char = 1;
+                }
             }
     }
 
-    if (!recording) memset(charbuff, 0, sizeof(int) * c);
+    if (!recording) { 
+        memset(charbuff, 0, sizeof(int) * c);
+        c = 0;
+    }
     return recording;
 }
 
@@ -193,14 +232,14 @@ int main(void)
     int c = 0;
 
     while(1) {
-        char inputChar = getc(stdin);
+        char inputchar = getc(stdin);
         int is_control_char = 0;
         //get cursor postion and clear the places written by the control characters
-        // <ctrl-c> ^C
-        if (!inputChar || inputChar == 3) break;
+        // <ctrl-c> ^c
+        if (!inputchar || inputchar == 3) break;
 
         char str[100] = "";
-        int recording = identify_input(inputChar, str, &is_control_char);
+        int recording = identify_input(inputchar, str, &is_control_char);
         //printf("is_control_char => %d", is_control_char);
         // ok so the input sink in not a continuous sink .... this code executes
         // before the next character ex: 97 after 27 is read from stdin.
@@ -208,12 +247,12 @@ int main(void)
         if (recording) continue;
         if (is_control_char) {
             // backspace, arrow keys etc ! (enter is not a control chracter but still needs to be cleared  how about we just clear it all and rewrite anyways ?)
-            // the input is a control character ! that we need to React to.
+            // the input is a control character ! that we need to react to.
             // clear the length of chars written by the control character
             if (!strncmp(str, "enter", 5)) {
                 // evaluate the result and move to a newline for further evaluation
                 printf("\n");
-                printf("\x1b[1000D");
+                printf("\x1b[1000d");
                 continue;
             }
             //else if (str == "backspace") {
@@ -222,11 +261,13 @@ int main(void)
         }
         else {
             // add character to buffer !
-            buffer[c++] = inputChar;
+            buffer[c++] = inputchar;
         }
         // now all the printed control characters get cleared because we rerender the buffer
         // on each input character !
         render(buffer);
+        printf("%s", str);
+        //move(1, up);
     }    
     // set cursor position to left most point on newline when exiting 
     printf("\n");
