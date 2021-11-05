@@ -10,7 +10,7 @@
 // https://overiq.com/c-programming-101/array-of-pointers-in-c/
 #include <math.h>
 
-typedef enum {false, true} bool;
+typedef enum booleans {false, true} bool;
 
 int match(char str1[], char str2[]) {
     return !strcmp(str1, str2);
