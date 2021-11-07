@@ -219,9 +219,7 @@ void render(char *buffer) {
 
 int main(void)
 {
-    //fgets(str, 80, stdin);
     system("stty raw");
-    //char a = getc(stdin);
     char buffer[LIMIT];
     int c = 0;
 
@@ -251,12 +249,16 @@ int main(void)
             else if (!strncmp(str, "BACKSPACE", 10)) {
                 buffer[--c] = '\000';
             }
-            // ENTER DOESNT WORK !
             else if (!strncmp(str, "ENTER", 6)) {
+                render(buffer); // if we dont rerender the buffer once before moving to next line
+                                // the ugly control character mark will be left ! (^M)
                 // evaluate the result and move to a newline for further evaluation
-                printf("\n"); // i dont think this will move us to the next line !
-                printf("\x1b[1000D");
-                strcpy(buffer, ""); // or memset maybe
+                printf("\n");         // comment this and the cursor wont go down !
+                printf("\x1b[1000D"); // comment this and the cursor wont go left ! (before the next render !)
+
+                // clearing the buffer as we wont have to edit the line anymore !
+                memset(buffer, '\000', c); // or memset maybe
+                c = 0;
                 continue;
             }
         }
