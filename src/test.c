@@ -60,17 +60,20 @@ void ReverseArray(int arr[], int size)
 }
 
 void move(int steps, DIRECTION dir) {
-    // move(20, right); works !
     char dirchar;
     switch (dir) {
         case up:
             dirchar = 'A';
+            break;
         case down:
             dirchar = 'B';
+            break;
         case right:
             dirchar = 'C';
+            break;
         case left:
             dirchar = 'D';
+            break;
         default:
             break;
     }
@@ -85,6 +88,7 @@ void print_array_until(int *intList, int l) {
 }
 
 static int charbuff[LIMIT] = {};
+char str[100] = "";
 
 bool buffer_matches(const int *sequence, int seq_len, bool *indentifies) {
     // change buffer to be a global variable
@@ -94,9 +98,13 @@ bool buffer_matches(const int *sequence, int seq_len, bool *indentifies) {
     *indentifies = (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
     return *indentifies;
 }
+bool keyis(char* key)  {
+    return !strncmp(str, key, strlen(key));
+}
 
 // lets make it such that if it identifies the input and returns successfully
 // it must always be a control character ! or any other char that need interpretation
+// YES LETS DO THIS ! HAVE A SPECIAL VALUE IN THE ENUM FOR RECORDING STATE TOO !
 int identify_input(char inputChar, char* str, int *is_control_char) {
     // printf("<%d>", (int)inputChar);
 
@@ -230,7 +238,7 @@ int main(void)
         // <ctrl-c> ^c
         if (!inputchar || inputchar == 3) break;
 
-        char str[100] = "";
+        strcpy(str, "");
         int recording = identify_input(inputchar, str, &is_control_char);
         //printf("is_control_char => %d", is_control_char);
         // ok so the input sink in not a continuous sink .... this code executes
@@ -240,16 +248,16 @@ int main(void)
         if (is_control_char) {
             // backspace, arrow keys etc ! (enter is not a control chracter but still needs to be cleared  how about we just clear it all and rewrite anyways ?)
             // the input is a control character ! that we need to react to.
-            // clear the length of chars written by the control character
 
-            printf("<%s>",str);
-            if (!strncmp(str, "TAB", 4)) {
+            // the first tab is smaller as compared to next tabs !
+            if (keyis("TAB")) {
                 buffer[c++] = '\t';
             }
-            else if (!strncmp(str, "BACKSPACE", 10)) {
+            else if (keyis("BACKSPACE")) {
+                if (c == 0) continue;
                 buffer[--c] = '\000';
             }
-            else if (!strncmp(str, "ENTER", 6)) {
+            else if (keyis("ENTER")) {
                 render(buffer); // if we dont rerender the buffer once before moving to next line
                                 // the ugly control character mark will be left ! (^M)
                 // evaluate the result and move to a newline for further evaluation
