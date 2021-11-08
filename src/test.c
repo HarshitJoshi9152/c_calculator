@@ -27,16 +27,6 @@ typedef enum ControlChars {
     TAB,
 } CONTROLCHAR;
 
-void ReverseArray(int arr[], int size)
-{
-    for (int i = 0; i < size/2; i++)
-    {
-        int temp = arr[i];
-        arr[i] = arr[size - 1 - i];
-        arr[size - 1 - i] = temp;
-    }
-}
-
 void move(int steps, DIRECTION dir) {
     char dirchar;
     switch (dir) {
@@ -67,13 +57,39 @@ void print_array_until(int *intList, int l) {
 
 static int charbuff[LIMIT] = {};
 
-bool buffer_matches(const int *sequence, int seq_len, bool *indentifies) {
+bool buffer_matches(const int *sequence, int seq_len, bool *identifies) {
     // change buffer to be a global variable
     // is it bad to multiply $seq_len with sizeof(int) implicitly ?????
     // what if we change the type of the array items to soemthing else
     // like a `short int` or `long long` ;
-    *indentifies = (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
-    return *indentifies;
+    *identifies = (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
+    return *identifies;
+}
+
+char buffer[LIMIT];
+int c = 0;
+int cursorPointer = 0;
+
+void addToBuffer(int val) {
+    for (int i = c; i > cursorPointer; i--) {
+        buffer[i] = buffer[i - 1];
+    }
+    buffer[cursorPointer++] = val;
+    c += 1;
+}
+void PopBuffer() {
+    for (int i = cursorPointer; i < c; i++) {
+        buffer[i] = buffer[i + 1];
+    }
+    buffer[c] = '\x00';
+    cursorPointer -= 1;
+    c -= 1;
+}
+
+void render(char *buffer) {
+    printf("\x1b[2K");      // clears the current line
+    printf("\x1b[1000D");   // moves cursor to left by 1000 characters
+    printf("%s", buffer);
 }
 
 CONTROLCHAR identify_input(char inputChar) {
@@ -135,7 +151,7 @@ CONTROLCHAR identify_input(char inputChar) {
             else if (buffer_matches(right_control_pressed, 6, &identified)) {
                 key = RIGHT_ARROW_CTRL;
             }
-            if (buffer_matches(left_control_pressed, 6, &identified)) {
+            else if (buffer_matches(left_control_pressed, 6, &identified)) {
                 key = LEFT_ARROW_CTRL;
             }
 
@@ -152,17 +168,9 @@ CONTROLCHAR identify_input(char inputChar) {
     return key;
 }
 
-void render(char *buffer) {
-    printf("\x1b[2K");      // clears the current line
-    printf("\x1b[1000D");   // moves cursor to left by 1000 characters
-    printf("%s", buffer);
-}
-
 int main(void)
 {
     system("stty raw");
-    char buffer[LIMIT];
-    int c = 0;
 
     while(1) {
         char inputchar = getc(stdin);
@@ -175,18 +183,18 @@ int main(void)
 
         else if (keyPressed == NOT_A_CONTROL_CHAR) {
             // add character to buffer !
-            buffer[c++] = inputchar;
+            addToBuffer(inputchar);
         }
         else {
             // the input is a control character ! that we need to react to.
-
             // the first tab is smaller as compared to next tabs
             if (keyPressed == TAB) {
-                buffer[c++] = '\t';
+                // buffer[c++] = '\t';
+                addToBuffer('\t');
             }
             else if (keyPressed == BACKSPACE) {
-                if (c == 0) continue;
-                buffer[--c] = '\000';
+                if (cursorPointer == 0) continue;
+                PopBuffer();
             }
             else if (keyPressed == ENTER) {
                 render(buffer); // if we dont rerender the buffer once before moving to next line
@@ -198,12 +206,23 @@ int main(void)
                 // clearing the buffer as we wont have to edit the line anymore !
                 memset(buffer, '\000', c); // or memset maybe
                 c = 0;
+                cursorPointer = 0;
                 continue;
+            }
+            else if (keyPressed == LEFT_ARROW) {
+                if (cursorPointer == 0) continue;
+                cursorPointer -= 1;
+            }
+            else if (keyPressed == RIGHT_ARROW) {
+                if (cursorPointer == c - 1) continue;
+                cursorPointer += 1;
             }
         }
         // now all the printed control characters get cleared because we rerender the buffer
         // on each input character ! (BUT not when we are recording !)
         render(buffer);
+        // move to the current position of cursor
+        if (c - cursorPointer) move(c - cursorPointer, left);
     }
     // set cursor position to left most point on newline when exiting 
     system("stty sane");
