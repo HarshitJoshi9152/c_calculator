@@ -23,8 +23,11 @@ typedef enum ControlChars {
     RIGHT_ARROW_CTRL,
     LEFT_ARROW_CTRL,
     BACKSPACE,
+    DELETE,
     ENTER,
     TAB,
+    HOME,
+    END
 } CONTROLCHAR;
 
 void move(int steps, DIRECTION dir) {
@@ -57,19 +60,25 @@ void print_array_until(int *intList, int l) {
 
 static int charbuff[LIMIT] = {};
 
-bool buffer_matches(const int *sequence, int seq_len, bool *identifies) {
+bool buffer_matches(const int *sequence, int seq_len) {
     // change buffer to be a global variable
     // is it bad to multiply $seq_len with sizeof(int) implicitly ?????
     // what if we change the type of the array items to soemthing else
     // like a `short int` or `long long` ;
-    *identifies = (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
-    return *identifies;
+    // *identifies = (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
+    // return *identifies;
+    return (!memcmp(charbuff, sequence, sizeof(int) * seq_len));
 }
 
 char buffer[LIMIT];
 int c = 0;
 int cursorPointer = 0;
 
+void clearBuffer() {
+    memset(buffer, '\000', c + 1);
+    c = 0;
+    cursorPointer = 0;
+}
 void addToBuffer(int val) {
     for (int i = c; i > cursorPointer; i--) {
         buffer[i] = buffer[i - 1];
@@ -78,12 +87,17 @@ void addToBuffer(int val) {
     c += 1;
 }
 void PopBuffer() {
+    cursorPointer -= 1;
     for (int i = cursorPointer; i < c; i++) {
         buffer[i] = buffer[i + 1];
     }
-    buffer[c] = '\x00';
-    cursorPointer -= 1;
-    c -= 1;
+    buffer[--c] = '\x00';
+}
+void RevPopBuffer() {
+    for (int i = cursorPointer; i < c; i++) {
+        buffer[i] = buffer[i + 1];
+    }
+    buffer[--c] = '\x00';
 }
 
 void render(char *buffer) {
@@ -93,7 +107,7 @@ void render(char *buffer) {
 }
 
 CONTROLCHAR identify_input(char inputChar) {
-    // printf("<%d>", (int)inputChar);
+    printf("<%d>", (int)inputChar);
 
     CONTROLCHAR key = NOT_A_CONTROL_CHAR;
     static int charCounter = 0;
@@ -119,43 +133,34 @@ CONTROLCHAR identify_input(char inputChar) {
     const int down_control_pressed[] = {27, 91, 49, 59, 53, 66};
     const int right_control_pressed[] = {27, 91, 49, 59, 53, 67};
     const int left_control_pressed[] = {27, 91, 49, 59, 53, 68};
+    const int home_[] = {27, 91, 72};
+    const int end_[] = {27, 91, 70};
+    const int delete_[] = {27, 91, 51, 126};
 
     switch(inputChar)
     {
         case 13:    {key = ENTER;     break;}
         case 10:    {key = ENTER;     break;}
         case 127:   {key = BACKSPACE; break;}
+        case 8:     {key = BACKSPACE; break;}
         case 9:     {key = TAB;       break;}
         default: {
+            if (charCounter < 3) break;     // optimisation [minimum len of sequence is `3`]
             // for sequences of characters !
-            bool identified = false;
-            if (buffer_matches(up_, 3, &identified)) {
-                key = UP_ARROW;
-            }
-            else if (buffer_matches(down_, 3, &identified)) {
-                key = DOWN_ARROW;
-            }
-            else if (buffer_matches(right_, 3, &identified)) {
-                key = RIGHT_ARROW;
-            }
-            else if (buffer_matches(left_, 3, &identified)) {
-                key = LEFT_ARROW;
-            }
-            // Control Pressed Arrow Keys !
-            else if (buffer_matches(up_control_pressed, 6, &identified)) {
-                key = UP_ARROW_CTRL;
-            }
-            else if (buffer_matches(down_control_pressed, 6, &identified)) {
-                key = DOWN_ARROW_CTRL;
-            }
-            else if (buffer_matches(right_control_pressed, 6, &identified)) {
-                key = RIGHT_ARROW_CTRL;
-            }
-            else if (buffer_matches(left_control_pressed, 6, &identified)) {
-                key = LEFT_ARROW_CTRL;
-            }
+            if (buffer_matches(home_, 3))                       key = HOME;
+            else if (buffer_matches(end_, 3))                   key = END;
+            else if (buffer_matches(up_, 3))                    key = UP_ARROW;
+            else if (buffer_matches(down_, 3))                  key = DOWN_ARROW;
+            else if (buffer_matches(right_, 3))                 key = RIGHT_ARROW;
+            else if (buffer_matches(left_, 3))                  key = LEFT_ARROW;
+            else if (buffer_matches(up_control_pressed, 6))     key = UP_ARROW_CTRL;
+            else if (buffer_matches(down_control_pressed, 6))   key = DOWN_ARROW_CTRL;
+            else if (buffer_matches(right_control_pressed, 6))  key = RIGHT_ARROW_CTRL;
+            else if (buffer_matches(left_control_pressed, 6))   key = LEFT_ARROW_CTRL;
+            else if (buffer_matches(delete_, 4))                key = DELETE;
 
-            if (identified)
+            // it has been identified
+            if (key != NOT_A_CONTROL_CHAR && key != RECORDING)
             {
                 memset(charbuff, 0, sizeof(int)* (charCounter + 1)); // remember c is an index and indexes start at zero
                 charCounter = 0;
@@ -188,13 +193,15 @@ int main(void)
         else {
             // the input is a control character ! that we need to react to.
             // the first tab is smaller as compared to next tabs
+
             if (keyPressed == TAB) {
-                // buffer[c++] = '\t';
                 addToBuffer('\t');
             }
             else if (keyPressed == BACKSPACE) {
-                if (cursorPointer == 0) continue;
-                PopBuffer();
+                if (cursorPointer != 0) PopBuffer();
+            }
+            else if (keyPressed == DELETE) {
+                if (cursorPointer != c) RevPopBuffer();
             }
             else if (keyPressed == ENTER) {
                 render(buffer); // if we dont rerender the buffer once before moving to next line
@@ -204,9 +211,7 @@ int main(void)
                 printf("\x1b[1000D"); // comment this and the cursor wont go left ! (before the next render !)
 
                 // clearing the buffer as we wont have to edit the line anymore !
-                memset(buffer, '\000', c); // or memset maybe
-                c = 0;
-                cursorPointer = 0;
+                clearBuffer();
                 continue;
             }
             else if (keyPressed == LEFT_ARROW) {
@@ -216,6 +221,14 @@ int main(void)
             else if (keyPressed == RIGHT_ARROW) {
                 if (cursorPointer == c - 1) continue;
                 cursorPointer += 1;
+            }
+            else if (keyPressed == HOME) {
+                if (cursorPointer == 0) continue;
+                cursorPointer = 0;
+            }
+            else if (keyPressed == END) {
+                if (cursorPointer == c) continue;
+                cursorPointer = c;
             }
         }
         // now all the printed control characters get cleared because we rerender the buffer
