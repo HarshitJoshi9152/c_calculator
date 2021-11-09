@@ -25,7 +25,6 @@ typedef enum ControlChars {
     BACKSPACE,
     DELETE,
     ENTER,
-    TAB,
     HOME,
     END
 } CONTROLCHAR;
@@ -143,7 +142,6 @@ CONTROLCHAR identify_input(char inputChar) {
         case 10:    {key = ENTER;     break;}
         case 127:   {key = BACKSPACE; break;}
         case 8:     {key = BACKSPACE; break;}
-        case 9:     {key = TAB;       break;}
         default: {
             if (charCounter < 3) break;     // optimisation [minimum len of sequence is `3`]
             // for sequences of characters !
@@ -194,10 +192,7 @@ int main(void)
             // the input is a control character ! that we need to react to.
             // the first tab is smaller as compared to next tabs
 
-            if (keyPressed == TAB) {
-                addToBuffer('\t');
-            }
-            else if (keyPressed == BACKSPACE) {
+            if (keyPressed == BACKSPACE) {
                 if (cursorPointer != 0) PopBuffer();
             }
             else if (keyPressed == DELETE) {
