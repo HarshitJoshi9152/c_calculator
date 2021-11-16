@@ -5,13 +5,14 @@
 #include <sys/time.h>
 #include <string.h>
 #include <termios.h>
+#include <ctype.h>
 
 #define LIMIT 10000
 
 typedef enum {false, true} bool;
 typedef enum directions {up, down, right, left} DIRECTION;  // for the move function.
 
-typedef enum ControlChars {
+typedef enum controlChars {
     NOT_A_CONTROL_CHAR,
     RECORDING,
     UP_ARROW,
@@ -98,15 +99,33 @@ void RevPopBuffer() {
     }
     buffer[--c] = '\x00';
 }
+void moveBackByWord() {
+    for (int i = cursorPointer - 1; i >= 0; i--)
+    {
+        if (isspace(buffer[i]) || i == 0) {
+            cursorPointer = i;
+            break;
+        }
+    }
+}
+void moveForwardByWord() {
+    for (int i = cursorPointer + 1; i <= c; i++)
+    {
+        if (isspace(buffer[i]) || i == c) {
+            cursorPointer = i;
+            break;
+        }
+    }
+}
 
 void render(char *buffer) {
     printf("\x1b[2K");      // clears the current line
     printf("\x1b[1000D");   // moves cursor to left by 1000 characters
-    printf("%s", buffer);
+    printf(">> %s", buffer);
 }
 
 CONTROLCHAR identify_input(char inputChar) {
-    printf("<%d>", (int)inputChar);
+    // printf("<%d>", (int)inputChar);
 
     CONTROLCHAR key = NOT_A_CONTROL_CHAR;
     static int charCounter = 0;
@@ -174,6 +193,7 @@ CONTROLCHAR identify_input(char inputChar) {
 int main(void)
 {
     system("stty raw");
+    render(buffer); // to get >>> easily
 
     while(1) {
         char inputchar = getc(stdin);
@@ -205,9 +225,15 @@ int main(void)
                 printf("\n");         // comment this and the cursor wont go down !
                 printf("\x1b[1000D"); // comment this and the cursor wont go left ! (before the next render !)
 
+                // print the result
+                printf("%s", buffer);
+
+                //  move to next line to take next input
+                printf("\n");
+                move(1000, left);
+
                 // clearing the buffer as we wont have to edit the line anymore !
                 clearBuffer();
-                continue;
             }
             else if (keyPressed == LEFT_ARROW) {
                 if (cursorPointer == 0) continue;
@@ -224,6 +250,12 @@ int main(void)
             else if (keyPressed == END) {
                 if (cursorPointer == c) continue;
                 cursorPointer = c;
+            }
+            else if (keyPressed == LEFT_ARROW_CTRL) {
+                moveBackByWord();
+            }
+            else if (keyPressed == RIGHT_ARROW_CTRL) {
+                moveForwardByWord();
             }
         }
         // now all the printed control characters get cleared because we rerender the buffer
