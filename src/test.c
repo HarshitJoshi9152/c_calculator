@@ -114,16 +114,19 @@ int main(int argc, char **args)
                 }
             }
             else if (keyPressed == RIGHT_ARROW) {
-                if (cursorPointer == c - 1) continue;
-                cursorPointer += 1;
+                if (cursorPointer != c - 1) {
+                    cursorPointer += 1;
+                }
             }
             else if (keyPressed == HOME) {
-                if (cursorPointer == 0) continue;
-                cursorPointer = 0;
+                if (cursorPointer == 0) {
+                    cursorPointer = 0;
+                }
             }
             else if (keyPressed == END) {
-                if (cursorPointer == c) continue;
-                cursorPointer = c;
+                if (cursorPointer == c) {
+                    cursorPointer = c;
+                }
             }
             else if (keyPressed == LEFT_ARROW_CTRL) {
                 moveBackByWord();
