@@ -6,8 +6,8 @@
 #include <termios.h>
 #include <ctype.h>
 
-#include "./test.h"
-#include "./calc.h"
+#include "./headers/test.h"
+#include "./headers/calc.h"
 
 int main(int argc, char **args)
 {

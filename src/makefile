@@ -1,10 +1,10 @@
 
-test: test.c types.h test.h calc.h
-	gcc test.c types.h test.h calc.h -Wall -o test.out
+test: test.c ./headers/types.h ./headers/test.h ./headers/calc.h
+	gcc test.c -Wall -o test.out
 
 
-run: test.c types.h test.h calc.h
-	gcc test.c types.h test.h calc.h -Wall -o test.out && ./test.out
+run: test.c ./headers/types.h ./headers/test.h ./headers/calc.h
+	gcc test.c -Wall -o test.out && ./test.out
 
-debug: test.c types.h test.h calc.h
-	gcc test.c types.h test.h calc.h -Wall -g -o debug.out
+debug: test.c ./headers/types.h ./headers/test.h ./headers/calc.h
+	gcc test.c -Wall -g -o debug.out

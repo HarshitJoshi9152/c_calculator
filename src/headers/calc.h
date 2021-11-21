@@ -1,5 +1,4 @@
-#ifndef CALC_H
-#define CALC_H
+#pragma once
 
 #include <stdio.h>
 #include <string.h>
@@ -229,5 +228,3 @@ void introduction() {
     printf("Welcome to C_Calculator ! you can perform simple operations like +,-,/,*\n");
     printf("built By @HarshitJoshi9152, report issues at \n");
 }
-
-#endif

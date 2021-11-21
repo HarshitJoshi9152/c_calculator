@@ -1,5 +1,4 @@
-#ifndef TEST_H
-#define TEST_H
+#pragma once
 
 // https://www.google.com/search?channel=fs&client=ubuntu&q=writing+a+library+in+C
 // https://stackoverflow.com/questions/36314426/do-you-define-global-variables-in-a-c-library
@@ -214,5 +213,3 @@ void newline() {
     printf("\n");
     printf("\x1b[1000D");
 }
-
-#endif
