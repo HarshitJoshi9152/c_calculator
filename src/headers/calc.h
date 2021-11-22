@@ -6,6 +6,11 @@
 #include "./types.h"
 
 
+typedef enum errors {
+    E_SUCCESSFUL,
+    E_BAD_SYNTAX,
+    E_INVCHAR_POD, // invalid char in Place Of Digit
+} Gen_Error;
 enum operations {ADD, SUB, MUL, DIV};
 
 int match(char str1[], char str2[]) {
@@ -50,7 +55,7 @@ void strip(char* str, int len) {
 }
 
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
-bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len) {
+Gen_Error genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len) {
     // int bytecode[1000]; // formatted like {value, inst_, value, inst_, value}
     int inst_counter = 0;  // no of instructions in bytecode
     int count = 0;         // loop counter
@@ -69,7 +74,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
                 intBuff = 0;
                 intlen = 0;
             } else {
-                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                return E_INVCHAR_POD;
                 break;
             }
             bytecode[inst_counter++] = ADD;
@@ -83,7 +88,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
                 intBuff = 0;
                 intlen = 0;
             } else {
-                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                return E_INVCHAR_POD;
                 break;
             }
             bytecode[inst_counter++] = SUB;
@@ -97,7 +102,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
                 intBuff = 0;
                 intlen = 0;
             } else {
-                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                return E_INVCHAR_POD;
                 break;
             }
             bytecode[inst_counter++] = MUL;
@@ -111,7 +116,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
                 intBuff = 0;
                 intlen = 0;
             } else {
-                fprintf(stderr, "ERROR BAD SYNTAX !\n");
+                return E_INVCHAR_POD;
                 break;
             }
             bytecode[inst_counter++] = DIV;
@@ -123,8 +128,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
             intBuff = 10 * intBuff + (c - '0');
             intlen += 1;
         } else {
-            fprintf(stderr, "ERROR ENCOUNTERED ! INVALID CHARACTERS IN PLACE OF DIGITS !\n");
-            return false;
+            return E_INVCHAR_POD;
             break;
         }
         count++;
@@ -134,7 +138,7 @@ bool genByteCode(char string[], int len, int bytecode[1000], int *byte_code_len)
         bytecode[inst_counter] = intBuff;
     }
     *byte_code_len = inst_counter + 1;
-    return true;
+    return E_SUCCESSFUL;
 }
 
 // BODMAS SUPPORT !
@@ -227,4 +231,8 @@ int reduce_bytecode(int* bytecode, int len) {
 void introduction() {
     printf("Welcome to C_Calculator ! you can perform simple operations like +,-,/,*\n");
     printf("built By @HarshitJoshi9152, report issues at \n");
+}
+
+void handleError(Gen_Error e_code) {
+    fprintf(stderr, "ERROR : <%d>", e_code);
 }

@@ -74,10 +74,10 @@ int main(int argc, char **args)
 
                 int bytecode[1000];
                 int byte_code_len;
-                bool generation_successful = genByteCode(input, len, bytecode, &byte_code_len);
+                Gen_Error e_code = genByteCode(input, len, bytecode, &byte_code_len);
 
                 // dont execute or add the calculation to history if bytecode generation is bad !
-                if (generation_successful) {
+                if (e_code == E_SUCCESSFUL) {
                     if (argc > 1) {
                         printf("Printing Byte Code !");
                         newline();
@@ -97,7 +97,9 @@ int main(int argc, char **args)
                     // print the result
                     printf("%d", res);
                 }
-
+                else {
+                    handleError(e_code);
+                }
                 //  move to next line to take next input
                 newline();
 
