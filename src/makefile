@@ -1,9 +1,9 @@
 
-calc: calc.c ./headers/types.h ./headers/test.h ./headers/calc.h
-	gcc calc.c -Wall -o calc.out
+calc: calc.c ./headers/types.h ./headers/inputline.h ./headers/calc.h
+	gcc calc.c -Wall -lm -o calc.out
 
-run: calc.c ./headers/types.h ./headers/test.h ./headers/calc.h
-	gcc calc.c -Wall -o calc.out && ./calc.out
+run: calc.c ./headers/types.h ./headers/inputline.h ./headers/calc.h
+	gcc calc.c -Wall -lm -o calc.out && ./calc.out
 
-debug: calc.c ./headers/types.h ./headers/test.h ./headers/calc.h
-	gcc calc.c -Wall -g -o debug.out
+debug: calc.c ./headers/types.h ./headers/inputline.h ./headers/calc.h
+	gcc calc.c -Wall -lm -g -o debug.out

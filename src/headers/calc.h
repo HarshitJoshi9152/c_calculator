@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
+
 #include "./types.h"
 
 
@@ -11,7 +13,9 @@ typedef enum errors {
     E_BAD_SYNTAX,
     E_INVCHAR_POD, // invalid char in Place Of Digit
 } Gen_Error;
-enum operations {ADD, SUB, MUL, DIV};
+
+//  The exponentiation operator is non-associative. | https://www.cs.utah.edu/~zachary/isp/worksheets/operprec/operprec.html
+enum operations {ADD, SUB, MUL, DIV, POW};
 
 int match(char str1[], char str2[]) {
     return !strcmp(str1, str2);
@@ -83,6 +87,8 @@ Gen_Error genByteCode(char string[], int len, float bytecode[1000], int *byte_co
         else if (c == 0x2a)    bytecode[inst_counter++] = MUL;
         // DIV
         else if (c == 0x2f)    bytecode[inst_counter++] = DIV;
+        // POW
+        else if (c == 0x5e)    bytecode[inst_counter++] = POW;
         // integer value
         else if(isdigit(c)) {
             int floatsRead = sscanf(string + count, "%f", &floatBuff);
@@ -157,6 +163,9 @@ float reduce_bytecode(float* bytecode, int len) {
                 break;
             case DIV:
                 res = op1 / op2;
+                break;
+            case POW:
+                res = pow(op1, op2);
                 break;
             default:
                 fprintf(stderr, "ERROR ENCOUNTERED ! INVALID OPERATOR CODE : %f", op);

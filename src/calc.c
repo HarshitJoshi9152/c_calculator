@@ -6,7 +6,7 @@
 #include <termios.h>
 #include <ctype.h>
 
-#include "./headers/test.h"
+#include "./headers/inputline.h"
 #include "./headers/calc.h"
 
 int main(int argc, char **args)
