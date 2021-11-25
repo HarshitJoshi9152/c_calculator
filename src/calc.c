@@ -11,6 +11,7 @@
 
 int main(int argc, char **args)
 {
+    introduction();
     system("stty raw");
     render(); // to get >>> easily
 
@@ -56,7 +57,7 @@ int main(int argc, char **args)
                 // OKAY ITS STARTING
                 copyBuffer(input);
                 strip(input, strlen(input));
-                if (match(input, "exit")) {
+                if (match(input, "exit") || match(input, "quit")) {
                     break;
                 }
                 else if(match(input, "history")) {
@@ -66,47 +67,40 @@ int main(int argc, char **args)
                         printf("%d", history[i].answer);
                         newline();
                     }
+                    // continue -> clear buffer -> rerender !
+                    clearBuffer();
+                    goto last_section; // but goto is bad should i use a switch ?
                 }
 
                 // bytecode generation and evaluation process starts
 
                 unsigned int len = strlen(input);
 
-                int bytecode[1000];
+                float bytecode[1000];
                 int byte_code_len;
                 Gen_Error e_code = genByteCode(input, len, bytecode, &byte_code_len);
 
                 // dont execute or add the calculation to history if bytecode generation is bad !
                 if (e_code == E_SUCCESSFUL) {
-                    if (argc > 1) {
-                        printf("Printing Byte Code !");
-                        newline();
-                        for (int i = 0; i < byte_code_len; i++) {
-                            printf("%d  ", bytecode[i]);
-                        }
-                        newline();
-                        printf("----------");
-                        newline();
-                    }
+                    if (argc > 1) printByteCode(bytecode, byte_code_len);
 
-                    int res = reduce_bytecode(bytecode, byte_code_len);
+                    float res = reduce_bytecode(bytecode, byte_code_len);
 
                     strcpy(history[history_counter].question, input);
                     history[history_counter++].answer = res;
 
                     // print the result
-                    printf("%d", res);
+                    printf("%f", res);
                 }
-                else {
-                    handleError(e_code);
-                }
+                else handleError(e_code);
+
                 //  move to next line to take next input
                 newline();
 
                 // clearing the buffer as we wont have to edit the line anymore !
                 clearBuffer();
             }
-            // FIX
+
             else if (keyPressed == LEFT_ARROW) {
                 // this is the fix for tailing control characters
                 // on 0 position left key press, idk why tho
@@ -121,12 +115,12 @@ int main(int argc, char **args)
                 }
             }
             else if (keyPressed == HOME) {
-                if (cursorPointer == 0) {
+                if (cursorPointer != 0) {
                     cursorPointer = 0;
                 }
             }
             else if (keyPressed == END) {
-                if (cursorPointer == c) {
+                if (cursorPointer != c) {
                     cursorPointer = c;
                 }
             }
@@ -139,9 +133,10 @@ int main(int argc, char **args)
         }
         // now all the printed control characters get cleared because we rerender the buffer
         // on each input character ! (BUT not when we are recording !)
-        render();
-        // move to the current position of cursor
-        if (c - cursorPointer) move(c - cursorPointer, left);
+        last_section:
+            render();
+            // move to the current position of cursor
+            if (c - cursorPointer) move(c - cursorPointer, left);
     }
     // set cursor position to left most point on newline when exiting 
     system("stty sane");

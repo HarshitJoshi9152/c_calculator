@@ -1,4 +1,19 @@
-#pragma once
+#include <stdio.h>
+
+// int setCounter(char *str);
+
+int main() {
+    float d = 0;
+    printf("%f\n\n", d);
+    // only 5 is the precision ?
+    char a[] = "harshit 23.54 + 23\n";
+    sscanf(a + 8, "%f", &d);
+    printf("%f\n", d);
+    return 0;
+}
+
+/**
+ * #pragma once
 
 #include <stdio.h>
 #include <string.h>
@@ -55,14 +70,13 @@ void strip(char* str, int len) {
 }
 
 int setCounterAfterFloat(char *str) {
-    int i = 0;
-    for (; str[i] != '\x00'; i++) {
+    for (int i = 0; str[i] != '\x00'; i++) {
         char c = str[i];
         if (c != '.' && !isdigit(c)) {
             return i;
         }
     }
-    return i;
+    return 0;
 }
 
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
@@ -76,26 +90,34 @@ Gen_Error genByteCode(char string[], int len, float bytecode[1000], int *byte_co
     while(count < len) {
         char c = string[count];
         // ADD
-        if (c == 0x2b)         bytecode[inst_counter++] = ADD;
+        if (c == 0x2b) {
+            bytecode[inst_counter++] = ADD;
+        }
         // SUB
-        else if (c == 0x2d)    bytecode[inst_counter++] = SUB;
+        else if (c == 0x2d) {
+            bytecode[inst_counter++] = SUB;
+        }
         // MUL
-        else if (c == 0x2a)    bytecode[inst_counter++] = MUL;
+        else if (c == 0x2a) {
+            bytecode[inst_counter++] = MUL;
+        }
         // DIV
-        else if (c == 0x2f)    bytecode[inst_counter++] = DIV;
+        else if (c == 0x2f) {
+            bytecode[inst_counter++] = DIV;
+        }
         // integer value
         else if(isdigit(c)) {
             int floatsRead = sscanf(string + count, "%f", &floatBuff);
             if (floatsRead != 1) return E_INVCHAR_POD;
             bytecode[inst_counter++] = floatBuff;
-            count += setCounterAfterFloat(string + count) - 1;
+            count = setCounterAfterFloat(string + count);
         } else {
-            return E_BAD_SYNTAX;
+            return E_INVCHAR_POD;
         }
         count++;
     }
 
-    *byte_code_len = inst_counter;
+    *byte_code_len = inst_counter + 1;
     return E_SUCCESSFUL;
 }
 
@@ -108,7 +130,7 @@ float reduce_bytecode(float* bytecode, int len) {
     int max_inst_indexes[len]; // cannot be more than the $len in anyway.
 
     while(i < len) {
-        float code = bytecode[i];
+        int code = bytecode[i];
         if (code > max_inst) {
             max_inst = code;
             max_inst_count = 0;
@@ -182,18 +204,6 @@ float reduce_bytecode(float* bytecode, int len) {
     return reduce_bytecode(bytecode, len - offset);
 }
 
-void printByteCode(float* bytecode, int len) {
-    // doesnt include "test.h" is that BAD? 
-    printf("Printing Byte Code !");
-    newline();
-    for (int i = 0; i < len; i++) {
-        printf("%f  ", bytecode[i]);
-    }
-    newline();
-    printf("----------");
-    newline();
-}
-
 void introduction() {
     printf("Welcome to C_Calculator ! you can perform simple operations like +,-,/,*\n");
     printf("built By @HarshitJoshi9152, report issues at \n");
@@ -202,3 +212,5 @@ void introduction() {
 void handleError(Gen_Error e_code) {
     fprintf(stderr, "ERROR : <%d>", e_code);
 }
+
+*/
