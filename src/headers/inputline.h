@@ -76,27 +76,13 @@ static char buffer[LIMIT];
 static int c = 0;  // counts the no of characters in buffer ! and used as a counter.
 static int cursorPointer = 0;
 
-void setBuffer(char *str) {
-    // ! issue seems here 
+void setBuffer(char *str) { 
     int len = strlen(str);
-    int i = 0;
-    // GOOD FOR DEBUGGING
-    // fprintf(stderr, "%d\n", c);
-    // fprintf(stderr, "%d\n", cursorPointer);
-    for (; i < len; ++i) {
-        buffer[i] = *(str + i);
-    }
-    buffer[i++] = '\x00';
-    cursorPointer = len;
-    c = len;
-    // fprintf(stderr, "%d\n", c);
-    // fprintf(stderr, "%d\n", cursorPointer);
+    strcpy(buffer, str);
+    cursorPointer = c = len;
 }
 void copyBuffer(char *str) {
-    for (int i = 0; i < c; ++i) {
-        *(str + i) = buffer[i];
-    }
-    *(str + c) = '\x00';
+    strcpy(str, buffer);
 }
 void clearBuffer() {
     memset(buffer, '\000', c + 1);
