@@ -58,6 +58,8 @@ void print_array_until(int *intList, int l) {
     printf("\n");
 }
 
+// this is the input sequence buffer !
+// the one that stores the control characters sequences to identify characters like arrow_left etc
 static int cha_seq_buff[LIMIT] = {};
 
 bool buffer_matches(const int *sequence, int seq_len) {
@@ -70,15 +72,26 @@ bool buffer_matches(const int *sequence, int seq_len) {
     return (!memcmp(cha_seq_buff, sequence, sizeof(int) * seq_len));
 }
 
-char buffer[LIMIT];
-int c = 0;
-int cursorPointer = 0;
+static char buffer[LIMIT];
+static int c = 0;  // counts the no of characters in buffer ! and used as a counter.
+static int cursorPointer = 0;
 
-void setBuffer(char *str, int len) {
-    for (int i = 0; i < len; ++i) {
+void setBuffer(char *str) {
+    // ! issue seems here 
+    int len = strlen(str);
+    int i = 0;
+    // GOOD FOR DEBUGGING
+    // fprintf(stderr, "%d\n", c);
+    // fprintf(stderr, "%d\n", cursorPointer);
+    for (; i < len; ++i) {
         buffer[i] = *(str + i);
+        fprintf(stderr, "%c\n", *(str+i));
     }
+    buffer[i++] = '\x00';
     cursorPointer = len;
+    c = len;
+    // fprintf(stderr, "%d\n", c);
+    // fprintf(stderr, "%d\n", cursorPointer);
 }
 void copyBuffer(char *str) {
     for (int i = 0; i < c; ++i) {

@@ -21,8 +21,9 @@ int main(int argc, char **args)
         char question[1000];
         int answer;
     };
-    unsigned char history_counter = 0; // what chars are signed too ?
-    struct CALCULATION history[1000];
+    unsigned int history_counter = 0; // what chars are signed too ?
+    unsigned int history_pointer = 0;
+    struct CALCULATION history[1000];  // IS THERE ANY WAY TO FIND ITS LENGTH
 
     while(1) {
         char inputchar = getc(stdin);
@@ -41,13 +42,7 @@ int main(int argc, char **args)
             // the input is a control character ! that we need to react to.
             // the first tab is smaller as compared to next tabs
 
-            if (keyPressed == BACKSPACE) {
-                if (cursorPointer != 0) PopBuffer();
-            }
-            else if (keyPressed == DELETE) {
-                if (cursorPointer != c) RevPopBuffer();
-            }
-            else if (keyPressed == ENTER) {
+            if (keyPressed == ENTER) {
                 render(); // if we dont rerender the buffer once before moving to next line
                                 // the ugly control character mark will be left ! (^M)
                 // evaluate the result and move to a newline for further evaluation
@@ -88,9 +83,10 @@ int main(int argc, char **args)
 
                     strcpy(history[history_counter].question, input);
                     history[history_counter++].answer = res;
+                    history_pointer++;
 
                     // print the result
-                    printf("%f", res);
+                    printf("%.5f", res);
                 }
                 else handleError(e_code);
 
@@ -100,7 +96,22 @@ int main(int argc, char **args)
                 // clearing the buffer as we wont have to edit the line anymore !
                 clearBuffer();
             }
-
+            else if (keyPressed == UP_ARROW) {
+                if (history_pointer != 0) {
+                    printf("len is %lu", strlen(history[history_pointer - 1].question));
+                    setBuffer(history[--history_pointer].question);
+                }
+            }
+            else if (keyPressed == DOWN_ARROW) {
+                if (history_pointer < history_counter)
+                    setBuffer(history[++history_pointer].question);
+            }
+            else if (keyPressed == BACKSPACE) {
+                if (cursorPointer != 0) PopBuffer();
+            }
+            else if (keyPressed == DELETE) {
+                if (cursorPointer != c) RevPopBuffer();
+            }
             else if (keyPressed == LEFT_ARROW) {
                 // this is the fix for tailing control characters
                 // on 0 position left key press, idk why tho
@@ -150,4 +161,6 @@ int main(int argc, char **args)
  * https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html#cursor-navigation
  * https://www.includehelp.com/c-programs/gotoxy-clrscr-getch-getche-for-gcc-linux.aspx
  *
+ * TODO:
+ *  1. add live syntax highlighting !
  */
