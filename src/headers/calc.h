@@ -47,6 +47,9 @@ void strip(char* str, int len) {
             case 0x0b: // vertical tab
                 remove = true;
                 break;
+            case 0x2c: // comma
+                remove = true;
+                break;
             default:
                 break;
         }
