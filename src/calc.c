@@ -8,6 +8,7 @@
 
 #include "./headers/inputline.h"
 #include "./headers/calc.h"
+#include "./headers/types.h"
 
 int main(int argc, char **args)
 {
@@ -24,6 +25,8 @@ int main(int argc, char **args)
     unsigned int history_counter = 0; // what chars are signed too ?
     unsigned int history_pointer = 0;
     struct CALCULATION history[1000];  // IS THERE ANY WAY TO FIND ITS LENGTH
+    // to only add previous items (items scrolled into view) if they have been modified
+    bool history_modified = false;
 
     while(1) {
         char inputchar = getc(stdin);
@@ -37,6 +40,8 @@ int main(int argc, char **args)
         else if (keyPressed == NOT_A_CONTROL_CHAR) {
             // add character to buffer !
             addToBuffer(inputchar);
+            // to only add previous items (items scrolled into view) if they have been modified
+            history_modified = true;
         }
         else {
             // the input is a control character ! that we need to react to.
@@ -81,14 +86,35 @@ int main(int argc, char **args)
 
                     float res = reduce_bytecode(bytecode, byte_code_len);
 
-                    strcpy(history[history_counter].question, input);
-                    history[history_counter++].answer = res;
-                    history_pointer++;
+                    // to only add previous items (items scrolled into view) if they have been modified
+                    // if (history_modified) {
+                    //     strcpy(history[history_counter].question, input);
+                    //     history[history_counter++].answer = res;
+                    //     history_pointer++;
+                    // }
+
+                    // if prev calc is performed again it is not recorded in history again
+                    // to easily access other (unique) previous commands/calculations. (command pollution)
+                    // but it has to be recorded if it is a modified version of previous calc.
+                    if (history_modified || history_counter - history_pointer > 1) {
+                        strcpy(history[history_counter].question, input);
+                        history[history_counter++].answer = res;
+                        history_pointer++;
+                    }
+                    history_pointer = history_counter;
+                    // instead of incrementing the counter we can just set it to
+                    // the last calculation's index ($history_counter) + 1.
+                    // to place it at the place for new calculation.
+                    // and not have it awkwardly move out of place, when we press
+                    // up or down after having used it once !
 
                     // print the result
                     printf("%.5f", res);
                 }
                 else handleError(e_code);
+
+                // to only add previous items (items scrolled into view) if they have been modified
+                history_modified = false;
 
                 //  move to next line to take next input
                 newline();
@@ -98,7 +124,6 @@ int main(int argc, char **args)
             }
             else if (keyPressed == UP_ARROW) {
                 if (history_pointer != 0) {
-                    printf("len is %lu", strlen(history[history_pointer - 1].question));
                     setBuffer(history[--history_pointer].question);
                 }
             }

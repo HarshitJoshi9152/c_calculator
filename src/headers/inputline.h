@@ -85,7 +85,6 @@ void setBuffer(char *str) {
     // fprintf(stderr, "%d\n", cursorPointer);
     for (; i < len; ++i) {
         buffer[i] = *(str + i);
-        fprintf(stderr, "%c\n", *(str+i));
     }
     buffer[i++] = '\x00';
     cursorPointer = len;

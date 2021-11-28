@@ -10,6 +10,7 @@
 
 typedef enum errors {
     E_SUCCESSFUL,
+    E_EMPTY_INPUT,
     E_BAD_SYNTAX,
     E_INVCHAR_POD, // invalid char in Place Of Digit
 } Gen_Error;
@@ -71,6 +72,7 @@ int setCounterAfterFloat(char *str) {
 
 // https://stackoverflow.com/questions/11656532/returning-an-array-using-c
 Gen_Error genByteCode(char string[], int len, float bytecode[1000], int *byte_code_len) {
+    if (len == 0) return E_EMPTY_INPUT;
     // int bytecode[1000]; // formatted like {value, inst_, value, inst_, value}
     int inst_counter = 0;  // no of instructions in bytecode
     int count = 0;         // loop counter
