@@ -124,6 +124,10 @@ int main(int argc, char **args)
             }
             else if (keyPressed == UP_ARROW) {
                 if (history_pointer != 0) {
+                    if (history_counter == history_pointer) {
+                        // to preserve the users current input !
+                        copyBuffer(history[history_pointer].question);
+                    }
                     setBuffer(history[--history_pointer].question);
                 }
             }
@@ -132,10 +136,16 @@ int main(int argc, char **args)
                     setBuffer(history[++history_pointer].question);
             }
             else if (keyPressed == BACKSPACE) {
-                if (cursorPointer != 0) PopBuffer();
+                if (cursorPointer != 0) {
+                    PopBuffer();
+                    history_modified = true;
+                }
             }
             else if (keyPressed == DELETE) {
-                if (cursorPointer != c) RevPopBuffer();
+                if (cursorPointer != c) {
+                    RevPopBuffer();
+                    history_modified = true;
+                }
             }
             else if (keyPressed == LEFT_ARROW) {
                 // this is the fix for tailing control characters
