@@ -18,6 +18,14 @@ typedef enum errors {
 //  The exponentiation operator is non-associative. | https://www.cs.utah.edu/~zachary/isp/worksheets/operprec/operprec.html
 enum operations {ADD, SUB, MUL, DIV, POW};
 
+static const char* OperationStrings[] = {
+    [ADD] = "ADD",
+    [SUB] = "SUB",
+    [MUL] = "MUL",
+    [DIV] = "DIV",
+    [POW] = "POW"
+};
+
 int match(char str1[], char str2[]) {
     return !strcmp(str1, str2);
 }
@@ -201,7 +209,8 @@ void printByteCode(float* bytecode, int len) {
     printf("Printing Byte Code !");
     newline();
     for (int i = 0; i < len; i++) {
-        printf("%f  ", bytecode[i]);
+        if (i % 2 != 0) printf("%s  ", OperationStrings[(int)bytecode[i]]);
+        else printf("%f  ", bytecode[i]);
     }
     newline();
     printf("----------");
@@ -216,3 +225,4 @@ void introduction() {
 void handleError(Gen_Error e_code) {
     fprintf(stderr, "ERROR : <%d>", e_code);
 }
+
