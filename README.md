@@ -1,6 +1,9 @@
 # C Calculator !
 
-simple shell console like interactive Calculator made in C by [Harshit Joshi](https://github.com/HarshitJoshi9152)
+simple shell console like interactive Calculator made in C
+
+![image](https://user-images.githubusercontent.com/37842304/234785980-0cfa55d7-3376-4135-997c-1a107eafb309.png)
+
 
 ## features
 
